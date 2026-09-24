@@ -1,4 +1,4 @@
-import visuals.Visuals;
+import Visuals.Visuals;
 
 class BinPacking {
     public static void main(String[] args) {

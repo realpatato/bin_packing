@@ -1,8 +1,16 @@
 package ExtremePoints;
 
-import Geometry.Polyhedron.*;
 import java.util.ArrayList;
 
+import ExtremePoints.Item.*;
+import ExtremePoints.Bin.*;
+
 public class ExtremePoints {
-    ArrayList<Polyhedron> bins;
+    ArrayList<Bin> bins;
+    ArrayList<Item> items;
+
+    public ArrayList<Item> sort_items() {
+        ArrayList<Item> sortedItems = new ArrayList<Item>();
+        return sortedItems;
+    }
 }

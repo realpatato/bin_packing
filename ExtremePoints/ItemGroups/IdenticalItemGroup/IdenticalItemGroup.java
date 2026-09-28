@@ -12,7 +12,11 @@ public class IdenticalItemGroup {
         items.add(i);
     }
 
-    public boolean add_item(Item ni) {
+    public Item get(int index) {
+        return items.get(index);
+    }
+
+    public boolean addItem(Item ni) {
         /* Checks if the item is identical, and adds it to the list if so */
         boolean add = true;
         Item i = items.get(0);

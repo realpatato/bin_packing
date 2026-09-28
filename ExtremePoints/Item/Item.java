@@ -3,7 +3,7 @@ package ExtremePoints.Item;
 import Geometry.Vector3.*;
 
 public class Item {
-    private Vector3 size;
+    private Vector3 size; //length, width, height
     private float weight;
     private boolean isRotatable, isTiltable, isStackable;
 

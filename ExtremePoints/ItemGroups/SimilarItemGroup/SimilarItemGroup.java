@@ -32,18 +32,8 @@ public class SimilarItemGroup {
             }
 
             if (ni.getIsTiltable() && ig.get(0).getIsTiltable()) {
-                if (ni.getSize().x == h) {
+                if (ni.getSize().x == h || ni.getSize().y == h) {
                     add = true;
-
-                    float temp = ni.getSize().x;
-                    ni.getSize().x = ni.getSize().z;
-                    ni.getSize().z = temp; 
-                } else if (ni.getSize().y == h) {
-                    add = true;
-
-                    float temp = ni.getSize().y;
-                    ni.getSize().y = ni.getSize().z;
-                    ni.getSize().z = temp; 
                 }
             }
         }

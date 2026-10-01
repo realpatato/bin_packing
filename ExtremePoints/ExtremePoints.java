@@ -101,14 +101,16 @@ public class ExtremePoints {
             double height = sig.getHeight();
             for (IdenticalItemGroup iig : sig.getIdenticalItemGroups()) {
                 if (iig.getHeight() != height) {
-                    if (iig.getSize().x == height) { //swaps x and z, tilting the box to match the heights
-                        double temp = iig.getSize().x;
-                        iig.getSize().x = iig.getSize().z;
-                        iig.getSize().z = temp; 
-                    } else if (iig.getSize().y == height) {
-                        double temp = iig.getSize().y;
-                        iig.getSize().y = iig.getSize().z;
-                        iig.getSize().z = temp; 
+                    for (Item i : iig.getItems()) {
+                        if (i.getSize().x == height) { //swaps x and z, tilting the box to match the heights
+                            double temp = i.getSize().x;
+                            i.getSize().x = i.getSize().z;
+                            i.getSize().z = temp; 
+                        } else if (i.getSize().y == height) {
+                            double temp = i.getSize().y;
+                            i.getSize().y = i.getSize().z;
+                            i.getSize().z = temp; 
+                        }
                     }
                 }
             }

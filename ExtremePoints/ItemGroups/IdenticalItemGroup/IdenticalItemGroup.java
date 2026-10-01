@@ -20,16 +20,16 @@ public class IdenticalItemGroup {
         return items.get(index);
     }
 
+    public ArrayList<Item> getItems() {
+        return items;
+    }
+
     public Item getFirst() {
         return first;
     }
 
     public double getHeight() {
         return height;
-    }
-
-    public Vector3 getSize() {
-        return first.getSize();
     }
 
     public boolean addItem(Item ni) {

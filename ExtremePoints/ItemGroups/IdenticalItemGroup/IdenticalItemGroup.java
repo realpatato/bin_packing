@@ -7,11 +7,13 @@ import ExtremePoints.Item.*;
 public class IdenticalItemGroup {
     private ArrayList<Item> items;
     private Item first;
+    private double height;
     
     public IdenticalItemGroup(Item i) {
         items = new ArrayList<Item>();
         items.add(i);
         first = items.get(0);
+        height = first.getSize().z;
     }
 
     public Item get(int index) {
@@ -20,6 +22,14 @@ public class IdenticalItemGroup {
 
     public Item getFirst() {
         return first;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public Vector3 getSize() {
+        return first.getSize();
     }
 
     public boolean addItem(Item ni) {

@@ -8,11 +8,13 @@ import ExtremePoints.ItemGroups.IdenticalItemGroup.*;
 public class SimilarItemGroup {
     private ArrayList<IdenticalItemGroup> itemGroups;
     private IdenticalItemGroup first;
+    private double height; 
 
     public SimilarItemGroup(Item i) {
         itemGroups = new ArrayList<IdenticalItemGroup>();
         itemGroups.add(new IdenticalItemGroup(i));
         first = itemGroups.get(0);
+        height = first.getFirst().getSize().z;
     }
 
     public double getHighestVolume() {
@@ -32,6 +34,10 @@ public class SimilarItemGroup {
 
     public IdenticalItemGroup getFirst() {
         return first;
+    }
+
+    public double getHeight() {
+        return height;
     }
 
     public boolean addItem(Item ni) {

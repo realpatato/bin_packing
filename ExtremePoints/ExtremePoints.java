@@ -59,8 +59,19 @@ public class ExtremePoints {
         );
     }
 
-    public ArrayList<Item> sortItems() { //sorts the items
-        ArrayList<Item> sortedItems = new ArrayList<Item>();
+    public ArrayList<SimilarItemGroup> rhoShuffle(ArrayList<SimilarItemGroup> usig) { //shuffles an array without destroying sorts, greedy random
+        ArrayList<SimilarItemGroup> rhoSig = new ArrayList<SimilarItemGroup>();
+        double p = 0.3; //represents rho, which helps determine randomness
+        while (usig.size() > 0) {
+            double y = Math.random();
+            int i = (int)(Math.pow(y, 1/p) * usig.size());
+            SimilarItemGroup sig = usig.remove(i);
+            rhoSig.add(sig);
+        }
+        return rhoSig;
+    }
+
+    public ArrayList<SimilarItemGroup> sortItems() { //sorts the items
         ArrayList<SimilarItemGroup> itemGroups = getItemGroups();
 
         //partitioning the groups based on stackablity
@@ -77,10 +88,34 @@ public class ExtremePoints {
         highestVolumeSort(stackable);
         highestVolumeSort(nonStackable);
 
-        stackable.addAll(nonStackable);
-        itemGroups = stackable;
+        stackable = rhoShuffle(stackable);
+        nonStackable = rhoShuffle(nonStackable);
 
-        System.out.println(itemGroups);
-        return sortedItems;
+        stackable.addAll(nonStackable);
+        
+        return stackable;
+    }
+
+    public void tilt(ArrayList<SimilarItemGroup> usig) { //modifies the list to make all objects in groups share the same height
+        for (SimilarItemGroup sig : usig) {
+            double height = sig.getHeight();
+            for (IdenticalItemGroup iig : sig.getIdenticalItemGroups()) {
+                if (iig.getHeight() != height) {
+                    if (iig.getSize().x == height) { //swaps x and z, tilting the box to match the heights
+                        double temp = iig.getSize().x;
+                        iig.getSize().x = iig.getSize().z;
+                        iig.getSize().z = temp; 
+                    } else if (iig.getSize().y == height) {
+                        double temp = iig.getSize().y;
+                        iig.getSize().y = iig.getSize().z;
+                        iig.getSize().z = temp; 
+                    }
+                }
+            }
+        }
+    }
+
+    public ArrayList<Item> flatten(ArrayList<SimilarItemGroup> sig) {
+        return new ArrayList<Item>();
     }
 }

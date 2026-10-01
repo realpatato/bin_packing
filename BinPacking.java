@@ -1,6 +1,7 @@
 import Visuals.Visuals;
 import ExtremePoints.*;
 import ExtremePoints.Item.*;
+import ExtremePoints.ItemGroups.SimilarItemGroup.SimilarItemGroup;
 
 import java.util.ArrayList;
 
@@ -21,7 +22,10 @@ class BinPacking {
         }
 
         ep.addItems(items);
-        ep.sortItems();
+        ArrayList<SimilarItemGroup> sortedItemGroups = ep.sortItems();
+        System.out.println(sortedItemGroups);
+        ep.tilt(sortedItemGroups);
+        System.out.println(sortedItemGroups);
 
         v.visualize();
     }

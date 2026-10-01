@@ -8,12 +8,14 @@ public class IdenticalItemGroup {
     private ArrayList<Item> items;
     private Item first;
     private double height;
+    private Vector3 orientation;
     
     public IdenticalItemGroup(Item i) {
         items = new ArrayList<Item>();
         items.add(i);
         first = items.get(0);
-        height = first.getSize().z;
+        orientation = first.getSize();
+        height = orientation.z;
     }
 
     public Item get(int index) {
@@ -30,6 +32,10 @@ public class IdenticalItemGroup {
 
     public double getHeight() {
         return height;
+    }
+
+    public Vector3 getOrientation() {
+        return orientation;
     }
 
     public boolean addItem(Item ni) {

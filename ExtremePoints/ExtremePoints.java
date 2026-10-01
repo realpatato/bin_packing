@@ -6,6 +6,7 @@ import java.util.Comparator;
 import ExtremePoints.Item.*;
 import ExtremePoints.ItemGroups.IdenticalItemGroup.IdenticalItemGroup;
 import ExtremePoints.ItemGroups.SimilarItemGroup.SimilarItemGroup;
+import ExtremePoints.ItemOrientationGroup.ItemOrientationGroup;
 import ExtremePoints.Bin.*;
 
 public class ExtremePoints {
@@ -101,23 +102,30 @@ public class ExtremePoints {
             double height = sig.getHeight();
             for (IdenticalItemGroup iig : sig.getIdenticalItemGroups()) {
                 if (iig.getHeight() != height) {
-                    for (Item i : iig.getItems()) {
-                        if (i.getSize().x == height) { //swaps x and z, tilting the box to match the heights
-                            double temp = i.getSize().x;
-                            i.getSize().x = i.getSize().z;
-                            i.getSize().z = temp; 
-                        } else if (i.getSize().y == height) {
-                            double temp = i.getSize().y;
-                            i.getSize().y = i.getSize().z;
-                            i.getSize().z = temp; 
-                        }
+                    if (iig.getOrientation().x == height) {
+                        double temp = iig.getOrientation().x;
+                        iig.getOrientation().x = iig.getOrientation().z;
+                        iig.getOrientation().z = temp; 
+                    } else if (iig.getOrientation().y == height) {
+                        double temp = iig.getOrientation().y;
+                        iig.getOrientation().y = iig.getOrientation().z;
+                        iig.getOrientation().z = temp; 
                     }
                 }
             }
         }
     }
 
-    public ArrayList<Item> flatten(ArrayList<SimilarItemGroup> sig) {
-        return new ArrayList<Item>();
+    public ArrayList<ItemOrientationGroup> flatten(ArrayList<SimilarItemGroup> usig) {
+        ArrayList<ItemOrientationGroup> items = new ArrayList<ItemOrientationGroup>();
+        for (SimilarItemGroup sig : usig) {
+            for (IdenticalItemGroup iig : sig.getIdenticalItemGroups()) {
+                for (Item i : iig.getItems()) {
+                    ItemOrientationGroup iog = new ItemOrientationGroup(i, iig.getOrientation());
+                    items.add(iog);
+                }
+            }
+        }
+        return items;
     }
 }

@@ -43,7 +43,11 @@ public class Item {
         return (size.x * size.y * size.z);
     }
 
+    public int getId() {
+        return this.hashCode();
+    }
+
     public String toString() { //for debug
-        return " | Item Object - Size = (" + size.x + ", " + size.y + ", " + size.z + ") - Stackable? " + getIsStackable() + " | ";
+        return " | Item Object - Size = " + size + " - Stackable? " + getIsStackable() + " - id: " + this.hashCode() + " | ";
     }
 }

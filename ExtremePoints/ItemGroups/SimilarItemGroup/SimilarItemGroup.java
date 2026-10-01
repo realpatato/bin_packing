@@ -44,15 +44,19 @@ public class SimilarItemGroup {
         boolean add = false;
 
         if (ni.getIsStackable() == itemGroups.get(0).getFirst().getIsStackable()) { //check if stability is the same
-
+            boolean added = false;
             for (IdenticalItemGroup ig : itemGroups) {
-                if (ig.addItem(ni)) { //check if item group already exists
-                    return true; //if so, stop and return true, cause the item has been added
+                if (ig.addItem(ni)) {
+                    added = true;
                 }
             }
 
+            if (added) {
+                return added;
+            }
+
             IdenticalItemGroup ig = itemGroups.get(0); //only need to check the first group, since all item groups are similar
-            double h = ig.get(0).getSize().z; //height for comparisons
+            double h = ig.getHeight(); //height for comparisons
 
             if (ni.getSize().z == h) { //check if the height is the same
                 add = true;

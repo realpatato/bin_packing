@@ -2,16 +2,21 @@ package ExtremePoints;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+
+import Geometry.Vector3.*;
 
 import ExtremePoints.Item.*;
 import ExtremePoints.ItemGroups.IdenticalItemGroup.IdenticalItemGroup;
 import ExtremePoints.ItemGroups.SimilarItemGroup.SimilarItemGroup;
-import ExtremePoints.ItemOrientationGroup.ItemOrientationGroup;
+import ExtremePoints.ItemPair.ItemPair;
 import ExtremePoints.Bin.*;
 
 public class ExtremePoints {
     ArrayList<Bin> bins;
     ArrayList<Item> items;
+
+    int[][] nonProjections = {{2, 3}, {1, 3}, {1, 2}};
 
     public ExtremePoints() {
         bins = new ArrayList<Bin>();
@@ -30,6 +35,7 @@ public class ExtremePoints {
         }
     }
 
+    /* Sort, tilt, and flattening the list of items */
     public ArrayList<SimilarItemGroup> getItemGroups() { //simply groups the items up for sorting
         ArrayList<SimilarItemGroup> groups = new ArrayList<SimilarItemGroup>();
         groups.add(new SimilarItemGroup(items.get(0)));
@@ -61,7 +67,7 @@ public class ExtremePoints {
     }
 
     public ArrayList<SimilarItemGroup> rhoShuffle(ArrayList<SimilarItemGroup> usig) { //shuffles an array without destroying sorts, greedy random
-        ArrayList<SimilarItemGroup> rhoSig = new ArrayList<SimilarItemGroup>();
+        ArrayList<SimilarItemGroup> rhoSig = new ArrayList<>();
         double p = 0.3; //represents rho, which helps determine randomness
         while (usig.size() > 0) {
             double y = Math.random();
@@ -76,8 +82,8 @@ public class ExtremePoints {
         ArrayList<SimilarItemGroup> itemGroups = getItemGroups();
 
         //partitioning the groups based on stackablity
-        ArrayList<SimilarItemGroup> stackable = new ArrayList<SimilarItemGroup>();
-        ArrayList<SimilarItemGroup> nonStackable = new ArrayList<SimilarItemGroup>();
+        ArrayList<SimilarItemGroup> stackable = new ArrayList<>();
+        ArrayList<SimilarItemGroup> nonStackable = new ArrayList<>();
         for (SimilarItemGroup g : itemGroups) {
             if (g.getFirst().getFirst().getIsStackable()) { //if the item group is stackable
                 stackable.add(g);
@@ -116,16 +122,99 @@ public class ExtremePoints {
         }
     }
 
-    public ArrayList<ItemOrientationGroup> flatten(ArrayList<SimilarItemGroup> usig) {
-        ArrayList<ItemOrientationGroup> items = new ArrayList<ItemOrientationGroup>();
+    public ArrayList<ItemPair> flatten(ArrayList<SimilarItemGroup> usig) {
+        ArrayList<ItemPair> items = new ArrayList<>();
         for (SimilarItemGroup sig : usig) {
             for (IdenticalItemGroup iig : sig.getIdenticalItemGroups()) {
                 for (Item i : iig.getItems()) {
-                    ItemOrientationGroup iog = new ItemOrientationGroup(i, iig.getOrientation());
+                    ItemPair iog = new ItemPair(i, iig.getOrientation());
                     items.add(iog);
                 }
             }
         }
         return items;
+    }
+
+    /* Extreme Point Generation */
+    public double getSizeInAxis(ItemPair ip, int axis) {
+        return ip.item().getSize().get(axis - 1);
+    }
+
+    public double getPosInAxis(ItemPair ip, int axis) {
+        return ip.vector3().get(axis - 1);
+    }
+
+    public double getEndPos(ItemPair ip, int axis) {
+        return getPosInAxis(ip, axis) + getSizeInAxis(ip, axis);
+    }
+
+    public void sortLoadedItems(ArrayList<ItemPair> items, int axis) { //sort items based on the end positions, in descending order
+        items.sort(new Comparator<ItemPair>() {
+                @Override 
+                public int compare(ItemPair a, ItemPair b) {
+                    double aEndPos = getEndPos(a, axis);
+                    double bEndPos = getEndPos(b, axis);
+
+                    return Double.compare(bEndPos, aEndPos);
+                }
+            }
+        );
+    }
+
+    //i feel that having a bunch of methods just for the if statements will make debugging easier in the long run
+    //its a bit ugly, and takes more lines of code, but it makes programming go more smoothly
+    public boolean noEffectFilter(ItemPair ip, Vector3 sp, int pa, int np1, int np2) {
+        return ((getPosInAxis(ip, pa) >= sp.get(pa - 1)) || (getEndPos(ip, np2) <= sp.get(np1 - 1)) || (getEndPos(ip, np2) <= sp.get(np2 - 1)));
+    }
+
+    public boolean projectionBlockedFilter(ItemPair bip, ItemPair ip, Vector3 sp, int np1, int np2) {
+        return (((getPosInAxis(ip, np1) >= getPosInAxis(bip, np1)) || (sp.get(np1 - 1) >= getPosInAxis(ip, np1))) && ((getPosInAxis(ip, np2) >= getPosInAxis(bip, np2)) || (sp.get(np2 - 1) >= getPosInAxis(ip, np2))));
+    }
+
+    public boolean addExtremePointCheck(ItemPair ip, Vector3 sp, int pa) {
+        return ((getEndPos(ip, pa) <= sp.get(pa - 1)) && ((pa != 3) || ip.item().getIsStackable()));
+    }
+
+    public boolean directHitCheck(ItemPair ip, Vector3 sp, int np1, int np2) {
+        return ((sp.get(np1 - 1) >= getPosInAxis(ip, np1)) && (sp.get(np2 - 1) >= getPosInAxis(ip, np2)));
+    }
+
+    public ArrayList<Vector3> projection(Vector3 startPoint, int projectionAxis, ArrayList<ItemPair> loadedItems) {
+        Vector3 extremePoint = startPoint;
+        int nonProjection1 = nonProjections[projectionAxis - 1][0];
+        int nonProjection2 = nonProjections[projectionAxis - 1][1];
+        ArrayList<ItemPair> blockingItems = new ArrayList<>();
+        ArrayList<Vector3> extremePoints = new ArrayList<>();
+        //sort the loaded items (how they are sorted defined in sort method)
+        ArrayList<ItemPair> sortedLoadedItems = new ArrayList<>(loadedItems);
+        sortLoadedItems(sortedLoadedItems, projectionAxis);
+        //label so that the blocked item loop continues the outer and not more blocked items
+        outer:
+        for (ItemPair ip : sortedLoadedItems) {
+            //filters out items that don't affect the projection
+            if (noEffectFilter(ip, startPoint, projectionAxis, nonProjection1, nonProjection2)) {
+                continue;
+            }
+            //filter out items that are blocked by others
+            for (ItemPair bip : blockingItems) {
+                if (projectionBlockedFilter(bip, ip, startPoint, nonProjection1, nonProjection2)) {
+                    continue outer;
+                }
+            }
+            //adding new extreme points
+            if (addExtremePointCheck(ip, startPoint, projectionAxis)) {
+                extremePoint = extremePoint.withNew(getEndPos(ip, projectionAxis), projectionAxis);
+                extremePoints.add(extremePoint);
+            }
+            //stop if the projection directly hits the item
+            if (directHitCheck(ip, startPoint, nonProjection1, nonProjection2)) {
+                return extremePoints;
+            }
+            blockingItems.add(ip);
+        }
+        //project to the wall of the bin if not blocked by any other items
+        extremePoint = extremePoint.withNew(0, projectionAxis);
+        extremePoints.add(extremePoint);
+        return extremePoints;
     }
 }

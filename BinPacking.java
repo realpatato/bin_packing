@@ -2,7 +2,7 @@ import Visuals.Visuals;
 import ExtremePoints.*;
 import ExtremePoints.Item.*;
 import ExtremePoints.ItemGroups.SimilarItemGroup.SimilarItemGroup;
-import ExtremePoints.ItemOrientationGroup.ItemOrientationGroup;
+import ExtremePoints.ItemPair.ItemPair;
 
 import java.util.ArrayList;
 
@@ -28,7 +28,7 @@ class BinPacking {
         //System.out.println(sortedItemGroups);
         ep.tilt(sortedItemGroups);
         //System.out.println(sortedItemGroups);
-        ArrayList<ItemOrientationGroup> flatSortedItemGroups = ep.flatten(sortedItemGroups);
+        ArrayList<ItemPair> flatSortedItemGroups = ep.flatten(sortedItemGroups);
         System.out.println(flatSortedItemGroups);
 
         v.visualize();

@@ -2,7 +2,6 @@ package ExtremePoints;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
 
 import Geometry.Vector3.*;
 
@@ -161,6 +160,7 @@ public class ExtremePoints {
         );
     }
 
+    /* Projection */
     //i feel that having a bunch of methods just for the if statements will make debugging easier in the long run
     //its a bit ugly, and takes more lines of code, but it makes programming go more smoothly
     public boolean noEffectFilter(ItemPair ip, Vector3 sp, int pa, int np1, int np2) {
@@ -215,6 +215,31 @@ public class ExtremePoints {
         //project to the wall of the bin if not blocked by any other items
         extremePoint = extremePoint.withNew(0, projectionAxis);
         extremePoints.add(extremePoint);
+        return extremePoints;
+    }
+
+    /* Extreme Point Generation */
+    public ArrayList<Vector3> genExtremePoints(ArrayList<ItemPair> loadedItems, ItemPair item) {
+        ArrayList<Vector3> extremePoints = new ArrayList<>();
+        Vector3 itemSize = item.item().getSize();
+        int[] directions = {1, 2, 3};
+        for (int j : directions) {
+            if (!item.item().getIsStackable() && j == 3) {
+                continue;
+            }
+            for (int d : directions) {
+                if (d == j) {
+                    continue;
+                }
+                Vector3 startPoint = item.vector3();
+                startPoint = startPoint.withNew(startPoint.get(j) + itemSize.get(j), j);
+                startPoint = startPoint.withNew(startPoint.get(d) + itemSize.get(d), d);
+                extremePoints.addAll(projection(startPoint, d, loadedItems));
+            }
+        }
+        if (item.item().getIsStackable()) {
+            extremePoints.add(item.vector3().withNew(itemSize.z + item.vector3().z, 3));
+        }
         return extremePoints;
     }
 }

@@ -1,7 +1,5 @@
 package Geometry.Vector3;
 
-import java.util.Vector;
-
 public class Vector3 {
     public double x, y, z;
 

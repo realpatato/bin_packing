@@ -1,4 +1,10 @@
 import Visuals.Visuals;
+
+import Geometry.Facet.*;
+import Geometry.Vector3.*;
+
+import utils.utils;
+
 import ExtremePoints.*;
 import ExtremePoints.Item.*;
 import ExtremePoints.ItemGroups.SimilarItemGroup.SimilarItemGroup;
@@ -22,6 +28,25 @@ class BinPacking {
                 } 
             }
         }
+
+        //really messy, will probably move to reading tables or something similar
+        ArrayList<Facet> facets = new ArrayList<>();
+        ArrayList<Vector3> vertices = new ArrayList<>();
+        
+        vertices.add(new Vector3(0, 0, 0));
+        vertices.add(new Vector3(100, 0, 0));
+        vertices.add(new Vector3(100, 0, 100));
+        vertices.add(new Vector3(0, 0, 100));
+        vertices.add(new Vector3(0, 100, 0));
+        vertices.add(new Vector3(100, 100, 0));
+        vertices.add(new Vector3(100, 100, 100));
+        vertices.add(new Vector3(0, 100, 100));
+
+        facets.add(new Facet(utils.createFromArrayList(vertices, 0, 1, 2, 3))); //bottom
+        facets.add(new Facet(utils.createFromArrayList(vertices, 0, 1, 5, 4))); //left
+        facets.add(new Facet(utils.createFromArrayList(vertices, 0, 3, 7, 4))); //front
+        facets.add(new Facet(utils.createFromArrayList(vertices, 2, 1, 5, 6))); //right
+        facets.add(new Facet(utils.createFromArrayList(vertices, 2, 3, 7, 6))); //back
 
         ep.addItems(items);
         ArrayList<SimilarItemGroup> sortedItemGroups = ep.sortItems();

@@ -32,4 +32,8 @@ public class Vector3 {
     public String toString() {
         return "(" + x + ", " + y + ", " + z + ")";
     }
+
+    public boolean equals(Vector3 v3) {
+        return ((x == v3.x) && (y == v3.y) && (z == v3.z));
+    }
 }

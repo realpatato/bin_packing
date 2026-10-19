@@ -2,11 +2,11 @@ package ExtremePoints;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Vector;
 
 import utils.utils;
 
 import Geometry.Vector3.*;
+import Geometry.Facet.*;
 
 import ExtremePoints.Item.*;
 import ExtremePoints.ItemGroups.IdenticalItemGroup.IdenticalItemGroup;
@@ -22,14 +22,20 @@ public class ExtremePoints {
     int[][] nonProjections = {{2, 3}, {1, 3}, {1, 2}};
 
     public ExtremePoints() {
-        bins = new ArrayList<Bin>();
-        items = new ArrayList<Item>();
+        bins = new ArrayList<>();
+        items = new ArrayList<>();
     }
 
-    public void addItems(ArrayList<Item> ui) {
-        for (Item i : ui) {
-            items.add(i);
+    public void createBin(ArrayList<Facet> uf) {
+        ArrayList<Vector3> vertices = new ArrayList<>();
+        for (Facet f : uf) {
+            utils.union(vertices, f.vertices());
         }
+        bins.add(new Bin(10000, 10000, vertices, uf));
+    }
+
+    public void addItems(ArrayList<Item> i) {
+        items.addAll(i);
     }
 
     public void addItems(Item... ui) {
@@ -147,7 +153,7 @@ public class ExtremePoints {
         return items;
     }
 
-    public ArrayList<ItemOrientationPair> getOrderedItemList(ArrayList<Item> items) {
+    public ArrayList<ItemOrientationPair> getOrderedItemList() {
         ArrayList<SimilarItemGroup> sig = sortItems();
         tilt(sig);
         return flatten(sig);
@@ -264,8 +270,57 @@ public class ExtremePoints {
     }
 
     /* Insertion Heuristic (THE BIN PACKING PART!!) */
+    public void sortExtremePoints(ArrayList<Vector3> ep) {
+        ep.sort(new Comparator<Vector3>() {
+                @Override 
+                public int compare(Vector3 v1, Vector3 v2) {
+                    int cmp = Double.compare(v1.z, v2.z);
+                    if (cmp != 0) return cmp;
+                    cmp = Double.compare(v1.y, v2.y);
+                    if (cmp != 0) return cmp;
+                    return Double.compare(v1.x, v2.x);
+                }
+            }
+        );
+    }
+
+    public boolean outOfBin() {
+        return false;
+    }
+
+    public boolean collision(Vector3 size, Vector3 pos, ArrayList<ItemPositionPair> load) {
+        for (ItemPositionPair ipp : load) {
+            Vector3 itemPos = ipp.vector3();
+            Vector3 itemSize = ipp.item().getSize();
+            int directions = 0;
+            for (int d = 0; d < 3; d++) {
+                if (!(itemPos.get(d) < pos.get(d) + size.get(d) && pos.get(d) < itemPos.get(d) + itemSize.get(d))) {
+                    directions++;
+                }
+            }
+            if (directions == 3) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void pack() {
         ArrayList<Vector3> extremePoints = new ArrayList<>();
         extremePoints.add(new Vector3(0, 0, 0));
+        ArrayList<ItemOrientationPair> orderedItemList = getOrderedItemList();
+        Bin bin = bins.get(0);
+        for (ItemOrientationPair iop : orderedItemList) {
+            int epi = 0; //extreme point index
+            boolean loaded = false;
+            while (epi != extremePoints.size() && !loaded) {
+                Vector3 ep = extremePoints.get(epi);
+                for (Vector3 orientation : iop.vector3s()) {
+                    //all the various checks
+                    boolean colliding = collision(orientation, ep, bin.getItems());
+                }
+                epi++;
+            }
+        }
     }
 }

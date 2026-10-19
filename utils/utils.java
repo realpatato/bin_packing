@@ -1,6 +1,7 @@
 package utils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class utils {
     /* Methods for doing mathematical unions */
@@ -8,6 +9,14 @@ public class utils {
      * Given two arraylists, both of type <T> combine the two while skipping duplicate elements
      */
     public static <T> void union(ArrayList<T> a, ArrayList<T> b) { 
+        for (T bo : b) {
+            if (!a.contains(bo)) {
+                a.add(bo);
+            }
+        }
+    }
+
+    public static <T> void union(ArrayList<T> a, List<T> b) {
         for (T bo : b) {
             if (!a.contains(bo)) {
                 a.add(bo);
@@ -23,5 +32,13 @@ public class utils {
         if (!a.contains(b)) {
             a.add(b);
         }
+    }
+
+    public static <T> ArrayList<T> createFromArrayList(ArrayList<T> ual, int... indexes) {
+        ArrayList<T> al = new ArrayList<>();
+        for (int i : indexes) {
+            al.add(ual.get(i));
+        }
+        return al;
     }
 }

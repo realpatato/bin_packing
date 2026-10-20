@@ -2,6 +2,7 @@ package ExtremePoints;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Vector;
 
 import utils.utils;
 
@@ -284,7 +285,53 @@ public class ExtremePoints {
         );
     }
 
-    public boolean outOfBin() {
+    public boolean flat(Vector3 normal) {
+        int zeroes = 0;
+        for (int i = 0; i < 3; i++) {
+            if (Math.abs(normal.get(i)) <= 1e-6) {
+                zeroes++;
+            }
+        }
+        return (zeroes >= 2);
+    }
+
+    public boolean flatCheck(Bin bin, Vector3 size, Vector3 pos) {
+        Vector3 boundingBox = bin.getBoundingBox();
+        for (int i = 0; i < 3; i++) {
+            if (pos.get(i) + size.get(i) > boundingBox.get(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean slantCheck(Bin bin, Facet f, Vector3 normal, Vector3 size, Vector3 pos) {
+        double planeConst = normal.dot(f.getVertex(0));
+
+        double farX = normal.x < 0 ? pos.x + size.x : pos.x;
+        double farY = normal.y < 0 ? pos.y + size.y : pos.y;
+        double farZ = normal.z < 0 ? pos.z + size.z : pos.z;
+
+        Vector3 far = new Vector3(farX, farY, farZ);
+        return normal.dot(far) < planeConst;
+    }
+
+    public boolean excedence(Bin bin, Vector3 size, Vector3 pos) {
+        if (flatCheck(bin, size, pos)) {
+            return true;
+        }
+        for (int i = 0; i < bin.getFacets().size(); i++) {
+            Vector3 normal = bin.getFacetNormals().get(i);
+            boolean exceeds = false;
+            if (flat(normal)) {
+                continue;
+            } else {
+                exceeds = slantCheck(bin, bin.getFacets().get(i), normal, size, pos);
+            }
+            if (exceeds) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -292,13 +339,14 @@ public class ExtremePoints {
         for (ItemPositionPair ipp : load) {
             Vector3 itemPos = ipp.vector3();
             Vector3 itemSize = ipp.item().getSize();
-            int directions = 0;
+            boolean overlapOnAll = true;
             for (int d = 0; d < 3; d++) {
                 if (!(itemPos.get(d) < pos.get(d) + size.get(d) && pos.get(d) < itemPos.get(d) + itemSize.get(d))) {
-                    directions++;
+                    overlapOnAll = false;
+                    break;
                 }
             }
-            if (directions == 3) {
+            if (overlapOnAll) {
                 return true;
             }
         }
@@ -318,6 +366,7 @@ public class ExtremePoints {
                 for (Vector3 orientation : iop.vector3s()) {
                     //all the various checks
                     boolean colliding = collision(orientation, ep, bin.getItems());
+                    boolean exceding = excedence(bin, orientation, ep);
                 }
                 epi++;
             }

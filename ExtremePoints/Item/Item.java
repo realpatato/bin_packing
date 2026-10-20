@@ -43,8 +43,8 @@ public class Item {
         return (size.x * size.y * size.z);
     }
 
-    public int getId() {
-        return this.hashCode();
+    public void changeSize(Vector3 n) {
+        size = n;
     }
 
     public String toString() { //for debug

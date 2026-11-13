@@ -2,7 +2,6 @@ package ExtremePoints;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Vector;
 
 import utils.utils;
 
@@ -120,12 +119,12 @@ public class ExtremePoints {
                 if (iig.getHeight() != height) {
                     if (iig.getOrientation().x == height) {
                         double temp = iig.getOrientation().x;
-                        iig.getOrientation().x = iig.getOrientation().y;
-                        iig.getOrientation().y = temp; 
-                    } else if (iig.getOrientation().z == height) {
-                        double temp = iig.getOrientation().z;
-                        iig.getOrientation().z = iig.getOrientation().y;
-                        iig.getOrientation().y = temp; 
+                        iig.getOrientation().x = iig.getOrientation().z;
+                        iig.getOrientation().z = temp; 
+                    } else if (iig.getOrientation().y == height) {
+                        double temp = iig.getOrientation().y;
+                        iig.getOrientation().y = iig.getOrientation().z;
+                        iig.getOrientation().z = temp; 
                     }
                 }
             }
@@ -250,7 +249,7 @@ public class ExtremePoints {
         Vector3 itemSize = item.item().getSize();
         int[] directions = {1, 2, 3};
         for (int j : directions) {
-            if (!item.item().getIsStackable() && j == 2) {
+            if (!item.item().getIsStackable() && j == 3) {
                 continue;
             }
             for (int d : directions) {
@@ -265,7 +264,7 @@ public class ExtremePoints {
             }
         }
         if (item.item().getIsStackable()) {
-            utils.union(extremePoints, item.vector3().withNew(itemSize.y + item.vector3().y, 2));
+            utils.union(extremePoints, item.vector3().withNew(itemSize.z + item.vector3().z, 2));
         }
         return extremePoints;
     }
@@ -275,9 +274,9 @@ public class ExtremePoints {
         ep.sort(new Comparator<Vector3>() {
                 @Override 
                 public int compare(Vector3 v1, Vector3 v2) {
-                    int cmp = Double.compare(v1.y, v2.y);
+                    int cmp = Double.compare(v1.z, v2.z);
                     if (cmp != 0) return cmp;
-                    cmp = Double.compare(v1.z, v2.z);
+                    cmp = Double.compare(v1.y, v2.y);
                     if (cmp != 0) return cmp;
                     return Double.compare(v1.x, v2.x);
                 }
@@ -353,12 +352,83 @@ public class ExtremePoints {
         return false;
     }
 
+    public boolean isRelevant(ItemPositionPair ip, Vector3 pos, Vector3 size) {
+        //x check
+        boolean x = ip.vector3().x < pos.x + size.x && ip.endPos().x > pos.x;
+        boolean y = ip.vector3().y < pos.y + size.y && ip.endPos().y > pos.y;
+        boolean z = ip.endPos().z == pos.z;
+        return x && y && z;
+    }
+
+    public void relevantSort(ArrayList<ItemPositionPair> ipps) {
+        ipps.sort(new Comparator<ItemPositionPair>() {
+                @Override 
+                public int compare(ItemPositionPair ipp1, ItemPositionPair ipp2) {
+                    //compares the end positions of the item pairs in the z axis
+                    return Double.compare(ipp2.endPos().z, ipp2.endPos().z);
+                }
+            }
+        );
+    }
+
+    public ArrayList<Vector3> rect(Vector3 a, Vector3 b) {
+        ArrayList<Vector3> corners = new ArrayList<>();
+        corners.add(a);
+        corners.add(a.withNew(a.x + b.x, 0));
+        corners.add(a.withNew(a.y + b.y, 1));
+        corners.add(a.add(b)); //we don't ever check the z coord, so adding the end z is fine
+        return corners;
+    }
+
+    public double supportedArea(ItemPositionPair ip, Vector3 size, Vector3 pos) {
+        Vector3 start = ip.vector3();
+        Vector3 supportEnd = ip.item().getSize();
+        Vector3 supportedEnd = pos.add(size);
+        double xOverlap = utils.min(supportedEnd.x, supportEnd.x) - utils.max(pos.x, start.x);
+        double yOverlap = utils.min(supportedEnd.y, supportEnd.y) - utils.max(pos.y, start.y);
+        return xOverlap * yOverlap;
+    }
+
+    public int countSupported(ItemPositionPair ip, Vector3 size, Vector3 pos) {
+        int ct = 0;
+        for (Vector3 c : rect(size, pos)) {
+            if (ip.vector3().x <= c.x && ip.endPos().x >= c.x && ip.vector3().y <= c.y && ip.endPos().y >= c.y) {
+                ct++;
+            }
+        }
+        return ct;
+    }
+
     public boolean nonFloatingStackable(Vector3 size, Vector3 pos, ArrayList<ItemPositionPair> load, Bin b) {
         ArrayList<ItemPositionPair> tempLoad = new ArrayList<>(load);
-        Item floorItem = new Item(b.getBoundingBox().x, 0, b.getBoundingBox().z); //creates the floor of the box
+        Vector3 itemSize = b.getBoundingBox().withNew(0, 2);
+        Item floorItem = new Item(itemSize); //creates the floor of the box
         ItemPositionPair floor = new ItemPositionPair(floorItem, new Vector3(0, 0, 0));
         tempLoad.add(floor);
-        return false;
+
+        ArrayList<ItemPositionPair> relevant = new ArrayList<>();
+        for (ItemPositionPair ip : tempLoad) {
+            if (isRelevant(ip, pos, size)) {
+                utils.union(relevant, ip); //only adds if its not in the list
+            }
+        }
+        relevantSort(relevant);
+
+        double totalSupportedArea = 0;
+        int supportedCornerPoints = 0;
+
+        for (ItemPositionPair ip : relevant) {
+            if (!ip.item().getIsStackable()) {
+                return false;
+            }
+            supportedCornerPoints += countSupported(ip, size, pos);
+            double additionalSupportArea = supportedArea(ip, size, pos);
+            if (additionalSupportArea > 0) {
+                totalSupportedArea += additionalSupportArea;
+            }
+        }
+        //0.9 may be replaced by a variable, allowing for more or less hovering area
+        return (supportedCornerPoints == 4) || (totalSupportedArea >= 0.9 * size.x * size.y);
     }
 
     public boolean canPlace(Vector3 s, Vector3 p, Bin b) {
@@ -366,8 +436,7 @@ public class ExtremePoints {
         //this is so that ideally, redundant work is avoided
         if (excedence(b, s, p)) return false;
         if (collision(s, p, b.getItems())) return false;
-        if (nonFloatingStackable(s, p, b.getItems(), b)) return false;
-        return true;
+        return nonFloatingStackable(s, p, b.getItems(), b);
     }
 
     public void pack() {

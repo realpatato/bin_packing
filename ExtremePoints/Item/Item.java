@@ -19,6 +19,10 @@ public class Item {
         this(length, width, height, 0.0, true, true, true);
     }
 
+    public Item(Vector3 size) {
+        this(size.x, size.y, size.z);
+    }
+
     public Vector3 getSize() {
         return size;
     }
